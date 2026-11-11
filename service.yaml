@@ -1,0 +1,13 @@
+# La "puerta interna": permite que otras apps del proyecto lleguen a la base de datos
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  labels:
+    app: aeropuerto-db
+spec:
+  selector:
+    app: aeropuerto-db
+  ports:
+    - port: 3306
+      targetPort: 3306

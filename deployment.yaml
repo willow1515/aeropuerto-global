@@ -1,0 +1,61 @@
+# El "horno": el contenedor de MySQL de Red Hat
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  labels:
+    app: aeropuerto-db
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate          # necesario porque el disco es ReadWriteOnce
+  selector:
+    matchLabels:
+      app: aeropuerto-db
+  template:
+    metadata:
+      labels:
+        app: aeropuerto-db
+    spec:
+      containers:
+        - name: mysql
+          image: registry.redhat.io/rhel9/mysql-80:latest
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MYSQL_DATABASE
+              value: aeropuerto_global_db
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-credenciales
+                  key: usuario
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-credenciales
+                  key: password
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-credenciales
+                  key: root-password
+          readinessProbe:
+            exec:
+              command: ["/bin/sh", "-c", "MYSQL_PWD=\"$MYSQL_PASSWORD\" mysqladmin -u \"$MYSQL_USER\" ping"]
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          volumeMounts:
+            - name: datos
+              mountPath: /var/lib/mysql/data
+      volumes:
+        - name: datos
+          persistentVolumeClaim:
+            claimName: mysql-data
