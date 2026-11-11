@@ -1,0 +1,13 @@
+# Disco persistente: aquí se guardan los datos de MySQL
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-data
+  labels:
+    app: aeropuerto-db
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
